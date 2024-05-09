@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/layout1}">
+<head>
+    <meta name="_csrf" th:content="${_csrf.token}" />
+    <meta name="_csrf_header" th:content="${_csrf.headerName}" />
+</head>
+<th:block layout:fragment="css">
+    <style>
+    </style>
+</th:block>
+
+<div layout:fragment="content">
+    <section class="hero-wrap hero-wrap-2 js-fullheight" style="background-image: url('/images/bg_3.jpg');" data-stellar-background-ratio="0.5">
+        <div class="overlay">
+            <input type="hidden" id="carId" th:value="${car.id}">
+            <input type="hidden" id="price" th:value="${car.price}" />
+        </div>
+        <div class="container">
+            <div class="row no-gutters slider-text js-fullheight align-items-end justify-content-start">
+                <div class="col-md-9 ftco-animate pb-5">
+                    <h1 class="mb-3 bread">자동차 상세페이지</h1>
+                </div>
+            </div>
+        </div>
+    </section>
+
+<section class="ftco-section ftco-car-details">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-12"  style="margin:20px 0;">
+                <div class="car-details">
+                    <div class="img rounded">
+                        <img th:src="${car.carImgDtoList[0].imgUrl}" th:alt="${car.carNm}"  class="img rounded d-flex align-items-end"/>
+                    </div>
+                    <div class="text text-center">
+                        <h2>[[${car.carNm}]]</h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div style="text-align: -webkit-center;">
+            <table class="table" style="width:400px !important;">
+                <tr class="text-center">
+                    <thead class="thead-primary">
+                    <th class="bg-primary heading" style="text-align;">요금 안내</th>
+                    </thead>
+                </tr>
+                <td class="price">
+                    <div >
+                        <h3>
+                            <span class="num">[[${car.price}]] 원</span>
+                            <span class="per">/ 시간당</span>
+                        </h3>
+                    </div>
+
+                    <div class="mb-5" style="text-align:-webkit-center;">
+                        <div class="input-group mb-3" style="max-width: 120px;">
+                            <div class="input-group-prepend">
+                                <button class="btn btn-outline-primary js-btn-minus count_btn"
+                                        type="button">&minus;</button>
+                            </div>
+                            <input type="text" class="form-control text-center" value="1"
+                                   placeholder="" aria-label="Example text with button addon"
+                                   aria-describedby="button-addon1" name="count" id="count">
+                            <div class="input-group-append">
+                                <button class="btn btn-outline-primary js-btn-plus count_btn"
+                                        type="button">&plus;</button>
+                            </div>
+                        </div>
+                        <div>
+                            <h5 style="display: inline-block; margin-right: 15px; color:black; font-weight:bold;'">총 상품 금액</h5>
+                            <strong id="totalPrice" class="text-primary h4"></strong>
+                        </div>
+                    </div>
+
+                    <p th:if="${#strings.equals(car.carSellStatus, 'SELL')}">
+                        <button type="button" class="btn btn-primary btn-lg"
+                                onclick="reserve(); calculateTotalPrice();" >예약하기</button>
+                    </p>
+                    <p th:unless="${#strings.equals(car.carSellStatus, 'SELL')}">
+                        해당 상품은 현재 예약이 불가능합니다.
+                    </p>
+                </td>
+
+            </table>
+        </div>
+
+    </div>
+</section>
+</div>
+
+<th:block layout:fragment="script">
+    <script th:inline="javascript">
+
+        //처음 상세페이지 화면에 들어올때 총 상품금액이 보여야 하므로
+        calculateTotalPrice();
+
+        function calculateTotalPrice() {
+           var count = $("#count").val(); //수량
+           var price = $("#price").val(); //가격
+           var totalPrice = (price * count).toLocaleString('ko-KR'); //천단위 콤마
+           $("#totalPrice").html(totalPrice + '원'); //총가격 출력
+        }
+
+        $('.js-btn-minus').on('click', function(e){
+           e.preventDefault();
+           if ( $(this).closest('.input-group').find('.form-control').val() > 1  ) {
+              $(this).closest('.input-group').find('.form-control').val(parseInt($(this).closest('.input-group').find('.form-control').val()) - 1);
+           } else {
+              $(this).closest('.input-group').find('.form-control').val(parseInt(1));
+           }
+
+           calculateTotalPrice();
+        });
+
+        $('.js-btn-plus').on('click', function(e){
+           e.preventDefault();
+           const stock = [[${car.stockNumber}]]; //재고
+           var count = $("#count").val(); //수량
+
+           if(count >= stock) {
+              alert("더이상 재고가 존재하지 않습니다!");
+              return;
+           }
+
+           $(this).closest('.input-group').find('.form-control').val(parseInt($(this).closest('.input-group').find('.form-control').val()) + 1);
+
+           calculateTotalPrice();
+        });
+
+
+        function reserve() {
+           //★헤더에 있는 토큰 값을 가지고 온다(반드시 같이 전송해야 함)
+           var token = $("meta[name='_csrf']").attr("content");
+           var header = $("meta[name='_csrf_header']").attr("content");
+
+           //서버에 전달할 데이터
+           var paramData = {
+                 carId : $("#carId").val(), //item의
+                 count: $("#count").val() //수량
+           }
+
+           //JSON -> 문자열 변경(ajax는 전달하는 데이터를 문자열로 만들어야한다)
+           var param = JSON.stringify(paramData);
+
+           $.ajax({
+              url : "/reserve", //request URL
+              type : "POST", //전송방식
+              contentType : "application/json",
+              data : param, //서버에 전송할 데이터
+              beforeSend : function(xhr) {
+                 //데이터를 전송하기전에 헤더에 csrf 값을 설정
+                 xhr.setRequestHeader(header, token);
+              },
+              dataType : "json",
+              cache : false,
+              success : function(result, status) {
+                 alert("예약이 완료 되었습니다." + result);
+                 //location.href = '/';
+              },
+              error : function(jqXHR, status, error) {
+                 if (jqXHR.status == '401') {
+                    alert('로그인 후 이용해주세요.');
+                    location.href = '/members/login';
+                 } else {
+                    //에러메세지 출력(ResponseEntity에서 받아온 값을 출력해준다)
+                    alert(jqXHR.responseText);
+                 }
+              }
+           });
+
+        }
+
+
+    </script>
+</th:block>
+
+</html>
