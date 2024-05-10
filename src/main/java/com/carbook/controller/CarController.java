@@ -10,15 +10,15 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.security.Principal;
 import java.util.List;
 import java.util.Optional;
 
@@ -114,7 +114,7 @@ public class CarController {
     public String carManage(CarSearchDto carSearchDto,
                              @PathVariable("page") Optional<Integer> page, Model model) {
 
-        Pageable pageable = PageRequest.of(page.isPresent() ? page.get() : 0 , 3);
+        Pageable pageable = PageRequest.of(page.isPresent() ? page.get() : 0 , 10);
 
         Page<Car> cars = carService.getAdminCarPage(carSearchDto, pageable);
 
@@ -148,4 +148,5 @@ public class CarController {
         model.addAttribute("car", carFormDto);
         return "car/carDtl";
     }
+
 }

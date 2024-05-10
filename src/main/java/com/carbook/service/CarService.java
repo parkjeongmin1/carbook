@@ -6,8 +6,10 @@ import com.carbook.dto.CarSearchDto;
 import com.carbook.dto.MainCarDto;
 import com.carbook.entity.Car;
 import com.carbook.entity.CarImg;
+import com.carbook.entity.Member;
 import com.carbook.repository.CarImgRepository;
 import com.carbook.repository.CarRepository;
+import com.carbook.repository.MemberRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -27,6 +29,7 @@ public class CarService {
     private final CarRepository carRepository;
     private final CarImgRepository carImgRepository;
     private final CarImgService carImgService;
+    private final MemberRepository memberRepository;
 
     public Long saveCar(CarFormDto carFormDto,
                         List<MultipartFile> carImgFileList) throws Exception {
@@ -102,4 +105,5 @@ public class CarService {
 
         return mainCarDtoPage;
     }
+
 }

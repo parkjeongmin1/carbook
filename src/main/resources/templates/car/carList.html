@@ -20,53 +20,93 @@
 
 
     <section class="ftco-section bg-light">
-        <div class="container">
-            <div class="row">
-                <div class="col-md-4">
-                    <th:block th:each="car, status: ${cars.getContent()}">
-                        <div class="text">
-                             <h2 class="mb-0"><a th:href="'/car/' + ${car.id}">
-                                 <img th:src="${car.imgUrl}" th:alt="${car.carNm}"  class="img rounded d-flex align-items-end"/>
-                                     </a></h2>
-                                     <div class="d-flex mb-3">
-                                         <a class="cat" th:href="'/car/' + ${car.id}">[[${car.carNm}]]</a>
-                                            <p class="price ml-auto">[[${car.price}]] 원 <span>/시간당</span></p>
-                                     </div>
 
-
-                            <div style="margin-bottom:20px;">
-                                <button type="submit" class="btn btn-primary py-2 ml-1" th:href="'/car/' + ${car.id}">예약하기</button>
-                                <a th:href="'/car/' + ${car.id}" class="btn btn-secondary py-2 ml-1">상세 페이지</a></p>
-                            </div>
-                         </div>
-                    </th:block>
+        <div class="container text-center">
+            <div class="row" >
+                <th:block th:each="car, status: ${cars.getContent()}">
+                <div class="col" style="text-align: -webkit-center;">
+                    <h2 class="mb-0"><a th:href="'/car/' + ${car.id}" >
+                        <img th:src="${car.imgUrl}" th:alt="${car.carNm}"  class="img rounded d-flex align-items-end" style="width:300px; height:200px;"/>
+                    </a></h2>
+                    <div class=" mb-3">
+                        <a class="cat" th:href="'/car/' + ${car.id}">[[${car.carNm}]]</a>
+                        <p class="price ml-auto">[[${car.price}]] 원 <span>/시간당</span></p>
+                    </div>
+                    <div style="margin-bottom:20px;">
+                        <a th:href="'/car/' + ${car.id}" class="btn btn-primary py-2 ml-1">예약하기</a>
+                        <a th:href="'/car/' + ${car.id}" class="btn btn-secondary py-2 ml-1">상세 페이지</a>
+                    </div>
                 </div>
+                </th:block>
+
             </div>
-            </div>
+        </div>
+
     </section>
 
-        <div class="row mt-5">
-            <div class="col text-center">
-                <div class="block-27">
-                    <ul>
-                        <li th:classappend="${cars.first}?'disabled'"><a th:href="@{'/cars/' + ${cars.number - 1}}">&lt;</a></li>
-                        <li
-                                th:each="page: ${#numbers.sequence(start, end)}"
-                                th:classappend="${cars.number eq page-1}?'active':''">
-                            <a class="page-link" th:inline="text"
-                               th:href="@{'/cars/' + ${page - 1}}">[[${page}]]</a>
-                        </li>
-                        <li th:classappend="${cars.last}?'disabled'">
-                            <a th:href="@{'/cars/' + ${cars.number + 1}}">></a>
-                        </li>
-                    </ul>
+        <nav
+                th:with="start=${(cars.number/maxPage)*maxPage + 1}
+			                 ,end=(${(cars.totalPages == 0) ? 1 : (start + (maxPage - 1) < cars.totalPages ? start + (maxPage - 1) : cars.totalPages)})"
+                aria-label="Page navigation example">
+            <ul class="pagination d-flex justify-content-center">
+                <li class="page-item" th:classappend="${cars.first}?'disabled'">
+                    <a class="page-link"
+                       th:href="@{'/car/list' + '?searchQuery=' + ${carSearchDto.searchQuery}
+									                               + '&page=' + ${cars.number - 1}}"><</a>
+                </li>
+
+                <li class="page-item"
+                    th:each="page: ${#numbers.sequence(start, end)}"
+                    th:classappend="${cars.number eq page-1}?'active':''">
+                    <a
+                            class="page-link" th:inline="text"
+                            th:href="@{'/car/list' + '?searchQuery=' + ${carSearchDto.searchQuery}
+									                               + '&page=' + ${page - 1}}">[[${page}]]</a>
+                </li>
+
+                <li class="page-item" th:classappend="${cars.last}?'disabled'">
+                    <a class="page-link"
+                       th:href="@{'/car/list' + '?searchQuery=' + ${carSearchDto.searchQuery}
+									                               + '&page=' + ${cars.number + 1}}">  > </a>
+                </li>
+            </ul>
+        </nav>
+
+        <div class="row" th:object="${carSearchDto}" style="height: 40px; padding-bottom:100px;">
+            <div class="col-lg-2"></div>
+            <div class="col-lg-5" style="display: flex">
+                <!-- 상품 등록일 -->
+                <select class="form-control" th:field="*{searchDateType}">
+                    <option value="all">전체기간</option>
+                    <option value="1d">1일</option>
+                    <option value="1w">1주</option>
+                    <option value="1m">1개월</option>
+                    <option value="6m">6개월</option>
+                </select>
+                <!-- 상품판매 상태 -->
+                <select class="form-control" th:field="*{searchSellStatus}">
+                    <option value="">판매상태(전체)</option>
+                    <option value="SELL">판매</option>
+                    <option value="SOLD_OUT">품절</option>
+                </select>
+                <!-- 상품명, 등록자 선택 -->
+                <select class="form-control" th:field="*{searchBy}">
+                    <option value="carNm">자동차명</option>
+                    <option value="createdBy">등록자</option>
+                </select>
+            </div>
+            <div class="col-lg-3">
+                <div style="display: flex">
+                    <input type="text" class="form-control" placeholder="검색어 입력" th:field="*{searchQuery}" />
+                    <button id="searchBtn" type="submit" class="btn btn-primary mb-3">검색</button>
                 </div>
             </div>
-    </div>
-
+            <div class="col-lg-2"></div>
+        </div>
     </form>
 </div>
 <th:block layout:fragment="script">
-    <script th:inline="javascript"></script>
+    <script th:inline="javascript">
+    </script>
 </th:block>
 </html>
